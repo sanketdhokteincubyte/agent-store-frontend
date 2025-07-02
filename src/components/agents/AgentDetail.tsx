@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import {
   Calendar,
   AlertCircle,
@@ -8,7 +8,6 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Link } from "react-router-dom";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -56,11 +55,13 @@ export const AgentDetail = () => {
   const handleAgentExecution = async (data: {
     prompt: string;
     email: string;
+    files?: File[];
   }) => {
     try {
       const result = await runAgentMutation.mutateAsync({
         prompt: data.prompt,
         user_email: data.email,
+        files: data.files,
       });
       // Store result in local state instead of global store
       setCurrentResult(result.response || "Response generated successfully");

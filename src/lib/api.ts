@@ -65,9 +65,25 @@ export const agentApi = {
     agentId: number,
     request: RunAgentRequest
   ): Promise<RunAgentResponse> => {
+    const formData = new FormData();
+    formData.append('prompt', request.prompt);
+    formData.append('user_email', request.user_email);
+
+    // Append files if present
+    if (request.files) {
+      request.files.forEach((file) => {
+        formData.append('files', file);
+      });
+    }
+
     const response = await api.post<RunAgentResponse>(
       `/run-agent/${agentId}`,
-      request
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
     return response.data;
   },
