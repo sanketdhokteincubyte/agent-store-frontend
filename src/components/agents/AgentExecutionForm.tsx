@@ -11,12 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { FileUpload } from "@/components/ui/file-upload";
 import { toast } from "sonner";
 
 interface AgentExecutionFormProps {
   agentPrompt?: string;
   isRunning: boolean;
-  onSubmit: (data: { prompt: string; email: string }) => Promise<void>;
+  onSubmit: (data: { prompt: string; email: string; files?: File[] }) => Promise<void>;
   onClear?: () => void;
 }
 
@@ -28,6 +29,7 @@ export const AgentExecutionForm = ({
 }: AgentExecutionFormProps) => {
   const [userPrompt, setUserPrompt] = useState("");
   const [email, setEmail] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,11 +58,13 @@ export const AgentExecutionForm = ({
       await onSubmit({
         prompt: userPrompt.trim(),
         email: email.trim(),
+        files: files.length > 0 ? files : undefined,
       });
 
       // Clear form on success
       setUserPrompt("");
       setEmail("");
+      setFiles([]);
     } catch (error) {
       // Error handling is done in the parent component
       console.error("Form submission error:", error);
@@ -70,6 +74,7 @@ export const AgentExecutionForm = ({
   const handleClear = () => {
     setUserPrompt("");
     setEmail("");
+    setFiles([]);
     onClear?.();
   };
 
@@ -121,7 +126,51 @@ export const AgentExecutionForm = ({
             </div>
           </div>
 
+          {/* Selected Files Display */}
+          {files.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-xs text-gray-600 font-medium">
+                Selected Files ({files.length})
+              </div>
+              <div className="space-y-1">
+                {files.map((file, index) => (
+                  <div
+                    key={`${file.name}-${index}`}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-gray-900 truncate max-w-[150px]">{file.name}</span>
+                      <span className="text-gray-500">({Math.round(file.size / 1024)}KB)</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const newFiles = files.filter((_, i) => i !== index);
+                        setFiles(newFiles);
+                      }}
+                      disabled={isRunning}
+                      className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600"
+                    >
+                      ×
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-3 pt-2">
+            <FileUpload
+              onFilesChange={setFiles}
+              disabled={isRunning}
+              maxFiles={5}
+              maxFileSize={25 * 1024 * 1024} // 25MB
+              compact={true}
+              value={files}
+            />
+
             <Button
               type="submit"
               disabled={isRunning || !userPrompt.trim() || !email.trim()}
